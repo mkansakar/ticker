@@ -1,0 +1,114 @@
+value,key,desc,sector
+397,ADBL,Agriculture Development Bank Limited,Commercial Banks
+385,ALICL,Asian Life Insurance Co. Limited,Insurance
+697,API,Api Power Company Ltd.,Hydro Power
+138,BOKL,Bank of Kathmandu Lumbini Ltd.,Commercial Banks
+153,BPCL,Butwal Power Company Limited,Hydro Power
+164,CBBL,Chhimek Laghubitta Bikas Bank Limited,Development Bank Limited
+532,CBL,Civil Bank Ltd,Commercial Banks
+605,CCBL,Century Commercial Bank Ltd.,Commercial Banks
+154,CHCL,Chilime Hydropower Company Limited,Hydro Power
+210,CIT,Citizen Investment Trust,Finance
+348,CZBIL,Citizen Bank International Limited,Commercial Banks
+311,DBBL,Deva Bikas Bank Limited,Development Bank Limited
+166,DDBL,Deprosc Development Bank Limited,Development Bank Limited
+137,EBL,Everest Bank Limited,Commercial Banks
+274,EDBL,Excel Development Bank Ltd.,Development Bank Limited
+181,EIC,Everest Insurance Co. Ltd.,Insurance
+490,FMDBL,First Micro Finance Development Bank Ltd.,Development Bank Limited
+417,GBBL,Garima Bikas Bank Limited,Development Bank Limited
+341,GBIME,Global IME Bank Limited,Commercial Banks
+447,GLICL,Gurans Life Insurance Company Ltd.,Insurance
+263,GMFIL,Guheshowori Merchant Bank & Finance Co. Ltd.,Finance
+2744,GRDBL,Green Development Bank Ltd.,Development Bank Limited
+134,HBL,Himalayan Bank Limited,Commercial Banks
+179,HGI,Himalayan General Insurance Co. Ltd,Insurance
+2742,HIDCL,Jalabidyut Lagani tatha Bikas Co. Ltd.,Others
+693,ILFCM,ILFCO Microfinance Bittiya Sanstha Ltd.,Development Bank Limited
+496,JBNL,Janata Bank Nepal Ltd.,Commercial Banks
+695,JSLBB,Janautthan Samudayic Laghubitta Bikas Bank Ltd.,Development Bank Limited
+142,KBL,Kumari Bank Limited,Commercial Banks
+427,KEBL,Kabeli Bikas Bank Limited,Development Bank Limited
+2751,KKHC,Khanikhola Hydropower Co. Ltd.,Hydro Power
+694,KMFL,Kisan Microfinance Bittiya Sanstha Ltd.,Development Bank Limited
+141,LBL,Laxmi Bank Limited,Commercial Banks
+190,LGIL,Lumbini General Insurance Co. Ltd.,Insurance
+188,LICN,Life Insurance Co. Nepal,Insurance
+618,LLBS,Laxmi Laghubitta Bittiya Sanstha Ltd.,Development Bank Limited
+140,MBL,Machhapuchhre Bank Limited,Commercial Banks
+371,MDB,Miteri Development Bank Limited,Development Bank Limited
+562,MEGA,Mega  Bank Nepal Ltd.,Commercial Banks
+1741,MERO,Mero Microfinance Bittiya Sanstha Ltd.,Development Bank Limited
+516,MFIL,Manjushree Finance Ltd.,Finance
+601,MLBBL,Mithila LaghuBitta Bikas Bank Ltd.,Development Bank Limited
+614,MMDBL,Mount Makalu Development Bank Ltd.,Development Bank Limited
+682,MMFDB,Mirmire Microfinance Development Bank Ltd.,Development Bank Limited
+691,MSMBS,Mahila Sahayatra Microfinance Bittiya Sanstha Ltd.,Development Bank Limited
+131,NABIL,Nabil Bank Limited,Commercial Banks
+136,NBB,Nepal Bangladesh Bank Limited,Commercial Banks
+602,NBBL,NagBeli LaghuBitta Bikas Bank Ltd.,Development Bank Limited
+186,NBIL,NB Insurance Co. Ltd.,Insurance
+517,NBL,Nepal Bank Limited,Commercial Banks
+144,NCCB,Nepal Credit And Commercial Bank Limited,Commercial Banks
+583,NGBBL,Nepal Grameen Bikas Bank  Ltd.,Development Bank Limited
+2743,NGPL,Ngadi Group Power Ltd.,Hydro Power
+132,NIB,Nepal Investment Bank Limited,Commercial Banks
+139,NICA,NIC Asia Bank Ltd.,Commercial Banks
+176,NICL,Nepal Insurance Co. Ltd.,Insurance
+183,NIL,Neco Insurance Co. Ltd.,Insurance
+396,NLBBL,Nerude Laghubita Bikas Bank Limited,Development Bank Limited
+559,NLG,NLG Insurance Company Ltd.,Insurance
+187,NLIC,Nepal Life Insurance Co. Ltd.,Insurance
+178,NLICL,National Life Insurance Co. Ltd.,Insurance
+238,NMB,NMB Bank Limited,Commercial Banks
+704,NMBMF,NMB  Microfinance Bittiya Sanstha Ltd.,Development Bank Limited
+152,NHPC,National Hydro Power Company Limited,Hydro Power
+2746,NMFBS,National Microfinance Bittiya Sanstha Ltd.,Development Bank Limited
+592,NNLB,Naya Nepal Laghubitta Bikas Bank Ltd.,Development Bank Limited
+307,NTC,Nepal Doorsanchar Comapany Limited,Others
+163,NUBL,Nirdhan Utthan Bank Limited,Development Bank Limited
+149,OHL,Oriental Hotels Limited,Hotels
+357,PCBL,Prime Commercial Bank Ltd.,Commercial Banks
+182,PIC,Premier Insurance Co. Ltd.,Insurance
+189,PICL,Prudential Insurance Co. Ltd.,Insurance
+393,PLIC,Prime Life Insurance Company Limited,Insurance
+184,PRIN,Prabhu Insurance Ltd.,Insurance
+255,PRVU,Prabhu  Bank Limited,Commercial Banks
+679,RBBBL,Raptibheri Bikas Bank Ltd.,Development Bank Limited
+177,RBCL,Rastriya Beema Company Limited,Insurance
+575,RMDC,Rural Microfinance Development Centre Ltd.,Development Bank Limited
+705,RMFL,Reliable Microfinance Bittiya Sanstha Ltd.,Development Bank Limited
+2748,RSDC,RSDC Laghubitta Bittiya Sanstha Ltd.,Development Bank Limited
+171,SANIMA,Sanima Bank Limited,Commercial Banks
+135,SBI,Nepal SBI Bank Limited,Commercial Banks
+145,SBL,Siddhartha Bank Limited,Commercial Banks
+133,SCB,Standard Chartered Bank Limited,Commercial Banks
+169,SDBL,Siddhartha Development Bank Ltd.,Development Bank Limited
+625,SHBL,Sahara Bikas Bank Ltd.,Development Bank Limited
+147,SHL,Soaltee Hotel Limited,Hotels
+591,SHPC,Sanima Mai Hydropower Ltd.,Hydro Power
+185,SIC,Sagarmatha Insurance Co. Ltd.,Insurance
+192,SICL,Shikhar Insurance Co. Ltd.,Insurance
+280,SIL,Siddhartha Insurance Ltd.,Insurance
+574,SKBBL,Sana Kisan Bikas Bank Ltd,Development Bank Limited
+1733,SKDBL,Saptakoshi Development Bank Ltd.,Development Bank Limited
+545,SLBBL,Swarojgar Laghu Bitta Bikas Bank Ltd.,Development Bank Limited
+2750,SLBS,Suryodaya Laghubitta Bittiya Sanstha Ltd.,Development Bank Limited
+403,SLICL,Surya Life Insurance Company Limited,Insurance
+502,SMFDB,Summit Micro Finance Development Bank Ltd.,Development Bank Limited
+359,SRBL,Sunrise Bank Limited,Commercial Banks
+268,SWBBL,Swabalamban Bikas Bank Limited,Development Bank Limited
+2764,SDESI,Swadeshi Laghubitta Bittiya Sanstha,Microfinance
+249,SYFL,Synergy Finance Ltd.,Finance
+503,TDBL,Tourism Development Bank Limited,Development Bank Limited
+442,TNBL,Tinau Development Bank Limited,Development Bank Limited
+148,TRH,Taragaon Regency Hotel Limited,Hotels
+180,UIC,United Insurance Co. (Nepal) Ltd.,Insurance
+687,VLBS,Vijaya laghubitta Bittiya Sanstha Ltd.,Development Bank Limited
+706,WOMI,Womi Microfinance Bittiya Sanstha Ltd.,Development Bank Limited
+2815,GMFBS,Ganapati Microfinance Bittiya Sanstha Limited,Microfinance
+2832,ILBS,Infinity Laghubitta Bittiya Sanstha Limited,Microfinance
+2768,MSLB,Mahuli Samudayik Laghubitta Bittiya Sanstha Ltd,Microfinance
+2761,SMATA,Samata Microfinance Bittiya Sanstha,Microfinance
+2809,SHIVM,SHIVAM CEMENTS LTD,Manufacturing
+2792,UPPER,Upper Tamakoshi Hydropower,Hydro 
