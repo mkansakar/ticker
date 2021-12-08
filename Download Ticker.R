@@ -1,0 +1,6 @@
+library(quantmod)
+getSymbols("RWT", src = "yahoo")
+x<-data.frame(RWT)
+x$Date<-rownames(x)
+head(x)
+tail(x)
