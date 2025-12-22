@@ -6,15 +6,15 @@ library(gridExtra)
 library(TTR)
 library(grid)
 
-tickers <- read.csv("/Users/kasa/RStudio/sp500_full_fundamentals_1.csv", header = TRUE, sep = ',', stringsAsFactors = FALSE)
+tickers <- read.csv("/Users/kasa/RStudio/sp500_full_fundamentals.csv", header = TRUE, sep = ',', stringsAsFactors = FALSE)
 financial_data <- tickers[, c("Symbol", "Company", "MarketCap", "TrailingPE", "ForwardPE", "DebtToEquity")]
 
-start <- as.Date("2025-05-01")
+start <- as.Date("2025-01-01")
 end <- Sys.Date()
 
 symbols <- financial_data$Symbol
 
-path1 <- "/Users/kasa/RStudio/S_And_P/500SP_"
+path1 <- "/Users/kasa/RStudio/S_And_P/"
 
 stock_data <- list()
 for (sym in symbols) {
@@ -22,7 +22,7 @@ for (sym in symbols) {
     cat("Downloading:", sym, "\n")
     data <- getSymbols(sym, src = "yahoo", from = start, to = end, auto.assign = FALSE)
     stock_data[[sym]] <- data
-    Sys.sleep(0.5)
+    Sys.sleep(0.25)
   }, error = function(e) {
     cat("Error downloading", sym, "\n")
   })
@@ -33,11 +33,12 @@ stock_data <- stock_data[!sapply(stock_data, is.null)]
 # while (dev.cur() > 1) dev.off()
 
 # Create a single PDF file
-pdf_file <- paste0(path1, "all_charts.pdf")
+pdf_file <- paste0(path1, "sp500_fundamental_charts.pdf")
 pdf(pdf_file, width = 16, height = 11) 
 
 
 for (symbol in names(stock_data)) {
+  tryCatch({ 
   fin_info <- financial_data[financial_data$Symbol == symbol, , drop = FALSE]
   if (nrow(fin_info) == 0) next
   
@@ -70,8 +71,7 @@ for (symbol in names(stock_data)) {
   support_20d <- round(min(tail(df$Low, 20)), 2)
   resistance_50d <- round(max(tail(df$High, 50)), 2)
   support_50d <- round(min(tail(df$Low, 50)), 2)
-  resistance_200d <- ifelse(nrow(df) >= 200, round(max(tail(df$High, 200)), 2), "N/A")
-  support_200d <- ifelse(nrow(df) >= 200, round(min(tail(df$Low, 200)), 2), "N/A")
+
   
   df <- na.omit(df)
   
@@ -82,7 +82,7 @@ for (symbol in names(stock_data)) {
     geom_rect(aes(xmin = Date - 0.3, xmax = Date + 0.3,
                   ymin = pmin(Open, Close), ymax = pmax(Open, Close),
                   fill = Close > Open), color = "black", size = 0.2) +
-    geom_line(aes(y = SMA3), color = "green", size = 1) +
+    geom_line(aes(y = SMA3), color = "red", size = 1) +
     geom_line(aes(y = SMA8), color = "blue", size = 1) +
     scale_fill_manual(values = c("FALSE" = "red", "TRUE" = "blue"), guide = "none") +
     labs(y = "Price", x = "", title = comp) +
@@ -143,10 +143,16 @@ for (symbol in names(stock_data)) {
     )
   
   #jpeg(file, width = 1280, height = 900, quality = 100)
-  
-  grid.arrange(p1, p_fund, p2, p3, ncol = 1, heights = c(2, 0.2, 0.5, 1))
+
+ 
+    grid.arrange(p1, p_fund, p2, p3, ncol = 1, heights = c(2, 0.2, 0.5, 1))
+
   
   cat("Created ggplot chart for:", symbol, "\n")
+  
+  }, error = function(e) {
+    cat("Error arranging chart for", symbol, "\n")
+  })  
 }
 dev.off()
 cat("PDF saved to:", pdf_file, "\n")
