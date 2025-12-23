@@ -5,36 +5,47 @@ library(scales)
 library(gridExtra)
 library(TTR)
 library(grid)
-library(zoo)
 
-tickers <- read.csv("c:/temp/sp500_full_fundamentals_1.csv", header = TRUE, sep = ',', stringsAsFactors = FALSE)
-financial_data <- tickers[, c("Symbol", "Company", "MarketCap", "TrailingPE", "ForwardPE", "DebtToEquity")]
+tickers <- read.csv("/Users/kasa/RStudio/S_and_P500_detailed_fundamentals.csv", stringsAsFactors = FALSE)
+financial_data <- tickers[, c("Symbol", "Company","Sector", "MarketCap", "ROE","OperatingMargin","FreeCashFlow","EPS","dividend_yield","BookValue", "TrailingPE", "ForwardPE", "DebtToEquity")]
 
-start <- as.Date("2025-01-01")
+symbols <- unique(financial_data$Symbol)
+
+start <- Sys.Date() - 366
 end <- Sys.Date()
 
-symbols <- financial_data$Symbol
+path1 <- "/Users/kasa/RStudio/S_And_P"
+dir.create(path1, showWarnings = FALSE)
 
-path1 <- "C:/Temp/500-S_And_P/"
-
-stock_data <- list()
-
-for (sym in symbols) {
+stock_data <- lapply(symbols, function(sym) {
   tryCatch({
     cat("Downloading:", sym, "\n")
-    x <- getSymbols(sym, src = "yahoo", from = start, to = end, auto.assign = FALSE)
-    stock_data[[sym]] <- na.omit(x)
-    Sys.sleep(0.5)
-  }, error = function(e) {
-    cat("Error downloading", sym, "\n")
-  })
-}
+    Sys.sleep(0.25)
+    getSymbols(sym, src = "yahoo", from = start, to = end, auto.assign = FALSE)
+  }, error = function(e) NULL)
+})
+names(stock_data) <- symbols
+stock_data <- stock_data[!sapply(stock_data, is.null)]
 
-stock_data <- stock_data[lengths(stock_data) > 0]
-
-pdf_file <- paste0(path1, "snp500_fundamental_ggplot_charts.pdf")
+pdf_file <- file.path(path1, "snp500_fundamental_charts.pdf")
 pdf(pdf_file, width = 16, height = 11)
 
+format_big <- function(x, digits = 2) {
+  if (is.na(x)) return("N/A")
+  x <- as.numeric(x)
+  
+  if (abs(x) >= 1e12) {
+    paste0(round(x / 1e12, digits), "T")
+  } else if (abs(x) >= 1e9) {
+    paste0(round(x / 1e9, digits), "B")
+  } else if (abs(x) >= 1e6) {
+    paste0(round(x / 1e6, digits), "M")
+  } else if (abs(x) >= 1e3) {
+    paste0(round(x / 1e3, digits), "K")
+  } else {
+    round(x, digits)
+  }
+}
 
 compute_volume_profile <- function(df, n_bins = 40) {
   price_min <- min(df$Low, na.rm = TRUE)
@@ -105,7 +116,7 @@ for (symbol in names(stock_data)) {
   resistance_50d <- round(max(tail(df$High, 50)), 2)
   support_50d <- round(min(tail(df$Low, 50)), 2)
   
-  comp <- paste(fin_info$Symbol, fin_info$Company)
+  comp <- paste(fin_info$Symbol, fin_info$Company, fin_info$Sector)
   
   vp <- compute_volume_profile(df, n_bins = 50)
   poc_price <- vp$POC
@@ -134,26 +145,35 @@ for (symbol in names(stock_data)) {
     )
   
   fund_text_left <- paste0(
-    "Market Cap: ", fin_info$MarketCap, "\n",
+    "Market Cap: ", format_big(fin_info$MarketCap), "\n",
     "Trailing P/E: ", round(fin_info$TrailingPE, 2), "\n",
     "Forward P/E: ", round(fin_info$ForwardPE, 2), "\n",
-    "Debt to equity: ", round(fin_info$DebtToEquity, 2)
+    "Debt to equity: ", round(fin_info$DebtToEquity, 2), "\n",
+    "Dividend Yield: ", round(fin_info$dividend_yield, 2)
   )
   
-  
+  fund_text_mid <- paste0(
+    "Return of Equity: ", round(current_price, 2), "\n",
+    "Operating Margin: ", fin_info$OperatingMargin, "\n" ,
+    "Free Cash Flow: ", format_big(fin_info$FreeCashFlow), "\n", 
+    "Book Value: ", fin_info$BookValue, "\n",
+    "Earning/Share: ", fin_info$EPS
+  )
+
   fund_text_right <- paste0(
     "Price: ", round(current_price, 2), "\n",
-    "Resistance20: ", resistance_20d, "\n" ,
-    "Support20: ", support_20d, "\n", 
+    "52 Week High: ", round(max(df$High),2), "\n" ,
+    "52 Week Low: ", round(min(df$Low),2), "\n", 
     "Resistance50: ", resistance_50d, "\n",
     "Support50: ", support_50d
   )
   
-  
   p_fund <- ggplot() +
     annotate("text", x = 0.05, y = 0.5, label = fund_text_left,
              hjust = 0, vjust = 0.5, size = 4, fontface = "bold") +
-    annotate("text", x = 0.55, y = 0.5, label = fund_text_right,
+    annotate("text", x = 0.38, y = 0.5, label = fund_text_mid,
+             hjust = 0, vjust = 0.5, size = 4, fontface = "bold") +
+    annotate("text", x = 0.70, y = 0.5, label = fund_text_right,
              hjust = 0, vjust = 0.5, size = 4, fontface = "bold") +
     coord_cartesian(xlim = c(0, 1), ylim = c(0, 1), clip = "off") +
     theme_void() +
@@ -168,16 +188,6 @@ for (symbol in names(stock_data)) {
     theme_minimal() +
     labs(title = "Volume Profile", x = "Volume", y = "Price")
   
-  p2 <- ggplot(df, aes(x = Date, y = Volume)) +
-    geom_col(fill = "gray70") +
-    labs(y = "Volume", x = "") +
-    theme_minimal() +
-    theme(
-      axis.text.x = element_blank(),
-      panel.grid.major = element_line(color = "gray90", linewidth = 0.2),
-      panel.grid.minor = element_blank()
-    )
-  
   p3 <- ggplot(df, aes(x = Date, y = RSI)) +
     geom_line(color = "purple", linewidth = 0.9) +
     geom_hline(yintercept = c(30, 70), linetype = "dashed", color = "gray50") +
@@ -190,7 +200,7 @@ for (symbol in names(stock_data)) {
       panel.grid.minor = element_blank()
     )
   
-  grid.arrange(p1, p_fund, p2, p3, ncol = 1, heights = c(2.2, 0.5, 0.6, 1))
+  grid.arrange(p1,  p3, p_fund, ncol = 1, heights = c(2.5, 1, 0.5))
   
   cat("Created chart for:", symbol, "\n")
 }
