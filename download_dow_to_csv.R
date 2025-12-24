@@ -72,3 +72,4 @@ cat("All symbols processed successfully\n")
 
 fwrite(tickers, "/Users/kasa/RStudio/S_and_P500_detailed_fundamentals.csv")
 cat("Saved", length(successful_symbols), "symbols, removed delisted symbols\n")
+
