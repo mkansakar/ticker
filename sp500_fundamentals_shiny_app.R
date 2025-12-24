@@ -4,10 +4,8 @@ library(ggplot2)
 library(TTR)
 library(gridExtra)
 library(scales)
+library(data.table)
 
-# =======================
-# Load fundamentals
-# =======================
 tickers <- read.csv(
   "/Users/kasa/RStudio/S_and_P500_detailed_fundamentals.csv",
   stringsAsFactors = FALSE
@@ -46,11 +44,31 @@ calculate_anchored_vwap <- function(df, anchor_index) {
   avwap
 }
 
+read_stock_data <- function(symbol) {
+  file_path <- paste0("/Users/kasa/RStudio/dow/", symbol, ".csv")
+  
+  if (!file.exists(file_path)) {
+    return(NULL)
+  }
+  data <- fread(file_path)
+  
+  data$Date <- as.Date(data$Date)
+  one_year_ago <- Sys.Date() - 365
+  data <- data[Date >= one_year_ago]
+  if (nrow(data) == 0) {
+    return(NULL)
+  }
+  xts_data <- xts(
+    x = data[, .(Open, High, Low, Close, Volume, Adjusted)],
+    order.by = data$Date
+  )
+  return(xts_data)
+}
 # =======================
 # UI
 # =======================
 ui <- fluidPage(
-  titlePanel("S&P 500 Stock Viewer"),
+  titlePanel("Stock Screening"),
   sidebarLayout(
     sidebarPanel(
       selectInput(
@@ -62,12 +80,11 @@ ui <- fluidPage(
       width = 3
     ),
     mainPanel(
-      plotOutput("chart", height = "850px"),
+      plotOutput("chart", height = "800px"),
       width = 9
     )
   )
 )
-
 # =======================
 # Server
 # =======================
@@ -75,17 +92,20 @@ server <- function(input, output, session) {
   
   stock_data <- reactive({
     req(input$symbol)
-    getSymbols(
-      input$symbol,
-      src = "yahoo",
-      from = Sys.Date() - 366,
-      auto.assign = FALSE
-    )
+    read_stock_data(input$symbol)
   })
-  
   output$chart <- renderPlot({
     
     xt <- stock_data()
+    if (is.null(xt) || nrow(xt) == 0) {
+      # Create empty plot with message
+      p <- ggplot() +
+        annotate("text", x = 0.5, y = 0.5, 
+                 label = paste("No data found for", input$symbol), 
+                 size = 6) +
+        theme_void()
+      return(p)
+    }
     fin <- financial_data[financial_data$Symbol == input$symbol, , drop = FALSE]
     
     df <- data.frame(
@@ -98,6 +118,15 @@ server <- function(input, output, session) {
     )
     df <- na.omit(df)
     
+    if (nrow(df) < 20) {
+      p <- ggplot() +
+        annotate("text", x = 0.5, y = 0.5, 
+                 label = paste("Insufficient data for", input$symbol, 
+                               "\nOnly", nrow(df), "days available"), 
+                 size = 6) +
+        theme_void()
+      return(p)
+    }
     df$VWAP <- calculate_vwap(df)
     df$RSI  <- RSI(df$Close, 14)
     
@@ -127,9 +156,9 @@ server <- function(input, output, session) {
         color = "black",
         linewidth = 0.2, show.legend = FALSE
       ) +
-      geom_line(aes(y = VWAP), color = "blue", linewidth = 1) +
-      geom_line(aes(y = AVWAP), color = "darkblue",
-                linewidth = 1, linetype = "dashed") +
+      #geom_line(aes(y = VWAP), color = "blue", linewidth = 1) +
+      #geom_line(aes(y = AVWAP), color = "darkblue",
+      #          linewidth = 1, linetype = "dashed") +
       geom_line(aes(y = BB_up), color = "darkgreen", alpha = 0.5) +
       geom_line(aes(y = BB_mid), color = "green", alpha = 0.5) +
       geom_line(aes(y = BB_dn), color = "darkgreen", alpha = 0.5) +
@@ -163,10 +192,10 @@ server <- function(input, output, session) {
       annotate(
         "text", 0.05, 0.5,
         label = paste(
-          "Market Cap:", format_big(fin$MarketCap),
-          "\nTrailing P/E:", round(fin$TrailingPE, 2),
+          "Trailing P/E:", round(fin$TrailingPE, 2),
           "\nForward P/E:", round(fin$ForwardPE, 2),
           "\nDebt/Equity:", round(fin$DebtToEquity, 2),
+          "\nEarning/Share:", fin$EPS,
           "\nReturn/Equity:", round(fin$ROE, 2),
           "\nDividend Yield:", round(fin$dividend_yield, 2)
         ),
@@ -175,8 +204,7 @@ server <- function(input, output, session) {
       annotate(
         "text", 0.38, 0.5,
         label = paste(
-          "Return/Equity:", round(fin$ROE, 2),
-          "\nOperating Margin:", round(fin$OperatingMargin, 2),
+          "Operating Margin:", round(fin$OperatingMargin, 2),
           "\nBook Value:", fin$BookValue,
           "\nCurrent Price:", round(current_price, 2),
           "\n52W High:", round(high_52, 2),
@@ -187,7 +215,7 @@ server <- function(input, output, session) {
       annotate(
         "text", 0.70, 0.5,
         label = paste(
-          "\nEarning/Share:", fin$EPS,
+          "Market Cap:", format_big(fin$MarketCap),
           "\nFree Cash Flow:", format_big(fin$FreeCashFlow),
           "\nRevenue:", format_big(fin$revenue),
           "\nGross Profit:", format_big(fin$gross_profits),
@@ -202,14 +230,13 @@ server <- function(input, output, session) {
         plot.background = element_rect(fill = "lightgreen", color = NA)
       )
     
-    
     grid.arrange(
       p_fund,
       p_price,
       p_volume,
       p_rsi,
       ncol = 1,
-      heights = c(0.6, 2.0, 0.8, 0.6)
+      heights = c(0.6, 2.0, 0.6, 1)
     )
   })
 }
