@@ -5,6 +5,7 @@ library(TTR)
 library(gridExtra)
 library(scales)
 library(data.table)
+library(shinyjs) 
 
 tickers <- read.csv(
   "/Users/kasa/RStudio/S_and_P500_detailed_fundamentals.csv",
@@ -20,6 +21,7 @@ financial_data <- tickers[, c(
 )]
 
 symbols <- sort(unique(financial_data$Symbol))
+
 
 format_big <- function(x) {
   if (is.na(x)) return("N/A")
@@ -69,6 +71,7 @@ read_stock_data <- function(symbol) {
 # =======================
 ui <- fluidPage(
   titlePanel("Stock Screening"),
+  actionButton("downloadBtn", "Download Data", icon = icon("download")),
   sidebarLayout(
     sidebarPanel(
       selectInput(
@@ -89,6 +92,10 @@ ui <- fluidPage(
 # Server
 # =======================
 server <- function(input, output, session) {
+  
+  observeEvent(input$downloadBtn, {
+    source("/Users/kasa/RStudio/download_dow_to_csv.R", local = TRUE)
+  })
   
   stock_data <- reactive({
     req(input$symbol)
