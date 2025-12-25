@@ -1,38 +1,46 @@
 import yfinance as yf
 import pandas as pd
-import sys
 import time
+import sys
+from pathlib import Path
 
-symbol = sys.argv[1]
+INPUT = sys.argv[1]
+OUTPUT = sys.argv[2]
 
-def get_fundamentals(ticker):
-    t = yf.Ticker(ticker)
-    info = t.info
+symbols = pd.read_csv(INPUT)["Symbol"].dropna().unique()
 
-    return {
-        "Ticker": ticker,
-        "Name": info.get("shortName"),
-        "Sector": info.get("sector"),
-        "MarketCap": info.get("marketCap"),
-        "EnterpriseValue": info.get("enterpriseValue"),
-        "TrailingPE": info.get("trailingPE"),
-        "ForwardPE": info.get("forwardPE"),
-        "PEGRatio": info.get("pegRatio"),
-        "PriceToBook": info.get("priceToBook"),
-        "PriceToSales": info.get("priceToSalesTrailing12Months"),
-        "EnterpriseToRevenue": info.get("enterpriseToRevenue"),
-        "EnterpriseToEBITDA": info.get("enterpriseToEbitda"),
-        "ROE": info.get("returnOnEquity"),
-        "ROA": info.get("returnOnAssets"),
-        "ProfitMargin": info.get("profitMargins"),
-        "GrossMargin": info.get("grossMargins"),
-        "OperatingMargin": info.get("operatingMargins"),
-        "EBITDAMargin": info.get("ebitdaMargins")
-    }
+rows = []
 
-if __name__ == "__main__":
+for i, sym in enumerate(symbols, 1):
+    print(f"[{i}/{len(symbols)}] Fetching {sym}", flush=True)
+
     try:
-        data = get_fundamentals(symbol)
-        print(pd.DataFrame([data]).to_csv(index=False))
-    except Exception:
-        print("")
+        t = yf.Ticker(sym)
+        info = t.info
+
+        if not info:
+            continue
+
+        rows.append({
+            "Symbol": sym,
+            "Name": info.get("longName"),
+            "Sector": info.get("sector"),
+            "MarketCap": info.get("marketCap"),
+            "TrailingPE": info.get("trailingPE"),
+            "ForwardPE": info.get("forwardPE"),
+            "ROE": info.get("returnOnEquity"),
+            "OperatingMargin": info.get("operatingMargins"),
+            "ProfitMargin": info.get("profitMargins"),
+            "DebtToEquity": info.get("debtToEquity"),
+            "RevenueGrowth": info.get("revenueGrowth"),
+        })
+
+        time.sleep(0.5)
+
+    except Exception as e:
+        print(f"Failed {sym}: {e}", flush=True)
+
+df = pd.DataFrame(rows)
+df.to_csv(OUTPUT, index=False)
+
+print(f"Saved {len(df)} rows to {OUTPUT}", flush=True)
