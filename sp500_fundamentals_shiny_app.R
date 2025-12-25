@@ -7,10 +7,33 @@ library(scales)
 library(data.table)
 library(shinyjs) 
 
-tickers <- read.csv(
-  "/Users/kasa/RStudio/S_and_P500_detailed_fundamentals.csv",
-  stringsAsFactors = FALSE
-)
+#===================================
+#Download fundamental Python module
+#===================================
+PYTHON <- "/Users/kasa/RStudio/studio/bin/python"  
+SCRIPT <- "/Users/kasa/RStudio/download_fundamentals.py"
+INPUT  <- "/Users/kasa/RStudio/symbols_1.csv"
+OUTPUT <- "/Users/kasa/RStudio/stock_fundamentals_out.csv"
+
+run_python_fundamentals <- function() {
+  cmd <- sprintf(
+    '"%s" "%s" "%s" "%s"',
+    PYTHON, SCRIPT, INPUT, OUTPUT
+  )
+  cat("Running:\n", cmd, "\n\n")
+  system(cmd, intern = FALSE)
+  
+  if (!file.exists(OUTPUT)) {
+    stop("Python ran but output CSV was not created")
+  }
+}
+
+
+if (file.exists("OUTPUT")) {
+  tickers <- read.csv(OUTPUT, stringsAsFactors = FALSE)
+} else {
+  return(NULL)
+}
 
 financial_data <- tickers[, c(
   "Symbol", "Company", "Sector",
@@ -22,17 +45,18 @@ financial_data <- tickers[, c(
 
 symbols <- sort(unique(financial_data$Symbol))
 
-
 format_big <- function(x) {
   if (is.na(x)) return("N/A")
   label_number(scale_cut = cut_short_scale())(x)
 }
 
+#===================================
+#Calculate VWAP and AVWAP (not used)
+#===================================
 calculate_vwap <- function(df) {
   tp <- (df$High + df$Low + df$Close) / 3
   cumsum(tp * df$Volume) / cumsum(df$Volume)
 }
-
 calculate_anchored_vwap <- function(df, anchor_index) {
   if (length(anchor_index) == 0 || is.na(anchor_index)) {
     return(rep(NA, nrow(df)))
@@ -46,20 +70,22 @@ calculate_anchored_vwap <- function(df, anchor_index) {
   avwap
 }
 
+#===================================
+#Read symbol data from DOW folder
+#===================================
 read_stock_data <- function(symbol) {
   file_path <- paste0("/Users/kasa/RStudio/dow/", symbol, ".csv")
   
-  if (!file.exists(file_path)) {
-    return(NULL)
-  }
+  if (!file.exists(file_path)) {return(NULL)}
+  
   data <- fread(file_path)
   
   data$Date <- as.Date(data$Date)
-  one_year_ago <- Sys.Date() - 365
+  one_year_ago <- Sys.Date() - 366
   data <- data[Date >= one_year_ago]
-  if (nrow(data) == 0) {
-    return(NULL)
-  }
+  
+  if (nrow(data) == 0) {return(NULL)}
+  
   xts_data <- xts(
     x = data[, .(Open, High, Low, Close, Volume, Adjusted)],
     order.by = data$Date
@@ -71,9 +97,11 @@ read_stock_data <- function(symbol) {
 # =======================
 ui <- fluidPage(
   titlePanel("Stock Screening"),
-  actionButton("downloadBtn", "Download Data", icon = icon("download")),
   sidebarLayout(
     sidebarPanel(
+      actionButton("runBtn", "Fundamentals", icon = icon("download")),
+      actionButton("downloadBtn", "Market Data", icon = icon("chart-line")),
+      actionButton("refreshBtn", "Reload Data",icon = icon("sync"),                   ),
       selectInput(
         "symbol",
         "Select Symbol",
@@ -81,7 +109,7 @@ ui <- fluidPage(
         selected = symbols[1]
       ),
       width = 3
-    ),
+    ),  # <-- Closing parenthesis for sidebarPanel() was missing
     mainPanel(
       plotOutput("chart", height = "800px"),
       width = 9
@@ -92,9 +120,37 @@ ui <- fluidPage(
 # Server
 # =======================
 server <- function(input, output, session) {
+  status <- reactiveVal("Ready")
   
   observeEvent(input$downloadBtn, {
+    status("Updating Market data...")
+    shinyjs::disable("downloadBtn")
     source("/Users/kasa/RStudio/download_dow_to_csv.R", local = TRUE)
+    
+    shinyjs::enable("downloadBtn")
+  })
+  
+  observeEvent(input$runBtn, {
+    status("Running Python script...")
+    #shinyjs::disable("runBtn")
+    
+    tryCatch({
+      success <- run_python_fundamentals()
+      
+      if (success) {
+        if (!is.null(data)) {
+          status(paste("Success! Loaded", nrow(data), "records"))
+        } else {
+          status("Python completed but no data loaded")
+        }
+      } else {
+        status("Python script failed")
+      }
+    }, error = function(e) {
+      status(paste("Error:", e$message))
+    }, finally = {
+      shinyjs::enable("downloadBtn")
+    })
   })
   
   stock_data <- reactive({
@@ -134,13 +190,13 @@ server <- function(input, output, session) {
         theme_void()
       return(p)
     }
-    df$VWAP <- calculate_vwap(df)
     df$RSI  <- RSI(df$Close, 14)
     
-    lookback <- min(252, nrow(df))
-    anchor <- which.min(tail(df$Low, lookback))
-    anchor_idx <- nrow(df) - lookback + anchor
-    df$AVWAP <- calculate_anchored_vwap(df, anchor_idx)
+    macd_xts <- MACD(df$Close, nFast = 12, nSlow = 26, nSig = 9)
+    
+    df$MACD <- as.numeric(macd_xts[, "macd"])
+    df$Signal <- as.numeric(macd_xts[, "signal"])
+    df$MACD_Histogram <- df$MACD - df$Signal
     
     bb <- as.data.frame(BBands(df$Close, n = 20, sd = 2))
     df$BB_up  <- bb$up
@@ -163,9 +219,6 @@ server <- function(input, output, session) {
         color = "black",
         linewidth = 0.2, show.legend = FALSE
       ) +
-      #geom_line(aes(y = VWAP), color = "blue", linewidth = 1) +
-      #geom_line(aes(y = AVWAP), color = "darkblue",
-      #          linewidth = 1, linetype = "dashed") +
       geom_line(aes(y = BB_up), color = "darkgreen", alpha = 0.5) +
       geom_line(aes(y = BB_mid), color = "green", alpha = 0.5) +
       geom_line(aes(y = BB_dn), color = "darkgreen", alpha = 0.5) +
@@ -186,6 +239,16 @@ server <- function(input, output, session) {
       geom_line(color = "purple") +
       geom_hline(yintercept = c(30, 70), linetype = "dashed", color = "red") +
       ylim(0, 100) +
+      theme_minimal()
+    
+    p_macd <- ggplot(df, aes(Date)) +
+      geom_line(aes(y = MACD), color = "blue", linewidth = 0.8) +
+      geom_line(aes(y = Signal), color = "red", linewidth = 0.8) +
+      geom_col(aes(y = MACD_Histogram), 
+               fill = ifelse(df$MACD_Histogram >= 0, "green", "red"), 
+               alpha = 0.6) +
+      geom_hline(yintercept = 0, color = "black", linetype = "solid", linewidth = 0.3) +
+      labs(y = "MACD", x = "") +
       theme_minimal()
     
     # =======================
@@ -240,10 +303,10 @@ server <- function(input, output, session) {
     grid.arrange(
       p_fund,
       p_price,
-      p_volume,
+      p_macd,
       p_rsi,
       ncol = 1,
-      heights = c(0.6, 2.0, 0.6, 1)
+      heights = c(0.6, 2.0, 1, 1)
     )
   })
 }
