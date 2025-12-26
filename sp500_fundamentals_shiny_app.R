@@ -1,3 +1,5 @@
+#app.R
+
 library(shiny)
 library(quantmod)
 library(ggplot2)
@@ -6,13 +8,14 @@ library(gridExtra)
 library(scales)
 library(data.table)
 library(shinyjs) 
+source("shap_engine.R")
 
 #===================================
 #Download fundamental Python module
 #===================================
 PYTHON <- "/Users/kasa/RStudio/studio/bin/python"  
 SCRIPT <- "/Users/kasa/RStudio/download_fundamentals.py"
-INPUT  <- "/Users/kasa/RStudio/symbols_1.csv"
+INPUT  <- "/Users/kasa/RStudio/symbols.csv"
 OUTPUT <- "/Users/kasa/RStudio/stock_fundamentals_out.csv"
 
 run_python_fundamentals <- function() {
@@ -28,7 +31,6 @@ run_python_fundamentals <- function() {
   }
 }
 
-
 if (file.exists("OUTPUT")) {
   tickers <- read.csv(OUTPUT, stringsAsFactors = FALSE)
 } else {
@@ -37,10 +39,11 @@ if (file.exists("OUTPUT")) {
 
 financial_data <- tickers[, c(
   "Symbol", "Company", "Sector",
-  "MarketCap", "revenue", "net_income", "ROE", "OperatingMargin",
-  "FreeCashFlow", "EPS", "dividend_yield",
-  "BookValue", "TrailingPE", "ForwardPE",
-  "DebtToEquity","gross_profits","ebitda"
+  "MarketCap", "revenue", "net_income", "ROE", 
+  "OperatingMargin",  "FreeCashFlow", "EPS", 
+  "dividend_yield", "BookValue", "TrailingPE",
+  "ForwardPE", "DebtToEquity","gross_profits","ebitda",
+  "Recommendation","DividendDate","FiveYearAvgDividendYield","TargetMeanPrice"
 )]
 
 symbols <- sort(unique(financial_data$Symbol))
@@ -49,6 +52,15 @@ format_big <- function(x) {
   if (is.na(x)) return("N/A")
   label_number(scale_cut = cut_short_scale())(x)
 }
+
+financial_data <- financial_data %>%
+  mutate(
+    Symbol = trimws(Symbol),
+    Sector = trimws(Sector)
+  ) %>%
+  filter(!is.na(Symbol), !is.na(Sector))
+
+sectors <- sort(unique(financial_data$Sector))
 
 #===================================
 #Calculate VWAP and AVWAP (not used)
@@ -100,16 +112,13 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       actionButton("runBtn", "Fundamentals", icon = icon("download")),
-      actionButton("downloadBtn", "Market Data", icon = icon("chart-line")),
-      actionButton("refreshBtn", "Reload Data",icon = icon("sync"),                   ),
-      selectInput(
-        "symbol",
-        "Select Symbol",
-        choices = symbols,
-        selected = symbols[1]
-      ),
-      width = 3
-    ),  # <-- Closing parenthesis for sidebarPanel() was missing
+      actionButton("downloadBtn", "Market Data", icon = icon("sync")),
+      #actionButton("buildFeaturesBtn", "Build Features", icon = icon("cogs")),
+      actionButton("runBtn", "Run SHAP", icon = icon("play")), br(), br(), tableOutput("shapTable"),
+      
+      selectInput("sector", "Select Sector", choices = sectors, selected = sectors[1]),
+      selectInput( "symbol", "Select Symbol", choices = NULL ), width = 3),
+    
     mainPanel(
       plotOutput("chart", height = "800px"),
       width = 9
@@ -122,6 +131,32 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   status <- reactiveVal("Ready")
   
+  #==============================
+  # Sector and symbol selection
+  #==============================
+  observeEvent(input$sector, {
+    
+    available_symbols <- financial_data %>%
+      filter(Sector == input$sector) %>%
+      arrange(Symbol) %>%
+      pull(Symbol)
+    
+    updateSelectInput(
+      session,
+      "symbol",
+      choices = available_symbols,
+      selected = available_symbols[1]
+    )
+  }, ignoreInit = FALSE)
+  
+  
+  selected_fundamental <- reactive({
+    req(input$symbol)
+    
+    financial_data %>%
+      filter(Symbol == input$symbol)
+  })
+  
   observeEvent(input$downloadBtn, {
     status("Updating Market data...")
     shinyjs::disable("downloadBtn")
@@ -130,9 +165,24 @@ server <- function(input, output, session) {
     shinyjs::enable("downloadBtn")
   })
   
+  shap_data <- eventReactive(input$runShap, {
+    shinyjs::disable("runShap")
+    run_shap_engine(
+      symbols_file = "/Users/kasa/RStudio/symbols.csv",
+      data_file    = "/Users/kasa/RStudio/market_features.csv"
+    )
+    read_csv("/Users/kasa/RStudio/SHAP_IMPORTANCE_BY_SYMBOL.csv", show_col_types = FALSE)
+    
+  })
+  
+  output$shapTable <- renderTable({
+    shap_data()
+    shinyjs::enable("runShap")
+  })
+  
   observeEvent(input$runBtn, {
     status("Running Python script...")
-    #shinyjs::disable("runBtn")
+    shinyjs::disable("runBtn")
     
     tryCatch({
       success <- run_python_fundamentals()
@@ -265,9 +315,10 @@ server <- function(input, output, session) {
           "Trailing P/E:", round(fin$TrailingPE, 2),
           "\nForward P/E:", round(fin$ForwardPE, 2),
           "\nDebt/Equity:", round(fin$DebtToEquity, 2),
-          "\nEarning/Share:", fin$EPS,
+          "\nEarning/Share:", round(fin$EPS,2),
           "\nReturn/Equity:", round(fin$ROE, 2),
-          "\nDividend Yield:", round(fin$dividend_yield, 2)
+          "\nDividend Yield:", round(fin$dividend_yield, 2),
+          "\nTarget Price:", round(fin$TargetMeanPrice)
         ),
         hjust = 0, size = 4
       ) +
@@ -276,6 +327,8 @@ server <- function(input, output, session) {
         label = paste(
           "Operating Margin:", round(fin$OperatingMargin, 2),
           "\nBook Value:", fin$BookValue,
+          "\n5 Yrs Avg Dividend:",fin$FiveYearAvgDividendYield,
+          
           "\nCurrent Price:", round(current_price, 2),
           "\n52W High:", round(high_52, 2),
           "\n52W Low:", round(low_52, 2)
@@ -290,7 +343,8 @@ server <- function(input, output, session) {
           "\nRevenue:", format_big(fin$revenue),
           "\nGross Profit:", format_big(fin$gross_profits),
           "\nEBITDA:", format_big(fin$ebitda),
-          "\nNet Income:", format_big(fin$net_income)
+          "\nNet Income:", format_big(fin$net_income),
+          "\nRecommend:" , fin$Recommendation
         ),
         hjust = 0, size = 4
       ) +
@@ -306,9 +360,12 @@ server <- function(input, output, session) {
       p_macd,
       p_rsi,
       ncol = 1,
-      heights = c(0.6, 2.0, 1, 1)
+      heights = c(0.7, 2.0, 1, 1)
     )
   })
 }
 
 shinyApp(ui, server)
+# shinyApp(ui, server, options = list(launch.browser = FALSE,  quiet = TRUE,  port = 3838, warn=-1,message=FALSE))
+
+
