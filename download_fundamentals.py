@@ -1,9 +1,13 @@
+#download_fundamentals.py
+
 import yfinance as yf
 import pandas as pd
 import time
 import sys
 from datetime import datetime
 from pathlib import Path
+import random
+
 
 INPUT = sys.argv[1]
 OUTPUT = sys.argv[2]
@@ -14,14 +18,11 @@ rows = []
 
 for i, sym in enumerate(symbols, 1):
     print(f"[{i}/{len(symbols)}] Fetching {sym}", flush=True)
-
     try:
         t = yf.Ticker(sym)
         info = t.info
-
         if not info:
             continue
-
         rows.append({
             "Symbol": sym,
            "Company": info.get("longName"),
@@ -32,7 +33,7 @@ for i, sym in enumerate(symbols, 1):
             "EnterpriseValue": info.get("enterpriseValue"),
             "TrailingPE": info.get("trailingPE"),
             "ForwardPE": info.get("forwardPE"),
-            "PEGRatio": info.get("pegRatio"),
+            # "PEGRatio": info.get("pegRatio"),
             "PriceToBook": info.get("priceToBook"),
             "PriceToSales": info.get("priceToSalesTrailing12Months"),
             "EnterpriseToRevenue": info.get("enterpriseToRevenue"),
@@ -49,8 +50,8 @@ for i, sym in enumerate(symbols, 1):
             # Growth
             "RevenueGrowth": info.get("revenueGrowth"),
             "EarningsGrowth": info.get("earningsGrowth"),
-            #"QuarterlyRevenueGrowth": info.get("revenueQuarterlyGrowth"),
-            "QuarterlyEarningsGrowth": info.get("earningsQuarterlyGrowth"),
+            # "QuarterlyRevenueGrowth": info.get("revenueQuarterlyGrowth"),
+            # "QuarterlyEarningsGrowth": info.get("earningsQuarterlyGrowth"),
             
             # Financials
             "revenue": info.get("totalRevenue"),
@@ -79,7 +80,7 @@ for i, sym in enumerate(symbols, 1):
             "DividendRate": info.get("dividendRate"),
             "PayoutRatio": info.get("payoutRatio"),
             "ExDividendDate": info.get("exDividendDate"),
-            "DividendDate": info.get("dividendDate"),
+            # "DividendDate": info.get("dividendDate"),
             "FiveYearAvgDividendYield": info.get("fiveYearAvgDividendYield"),
             
             # Share Stats
@@ -88,23 +89,23 @@ for i, sym in enumerate(symbols, 1):
             "SharesShort": info.get("sharesShort"),
             "ShortRatio": info.get("shortRatio"),
             "ShortPercentOfFloat": info.get("shortPercentOfFloat"),
-            "InsiderOwnership": info.get("heldPercentInsiders"),
-            "InstitutionalOwnership": info.get("heldPercentInstitutions"),
+            # "InsiderOwnership": info.get("heldPercentInsiders"),
+            # "InstitutionalOwnership": info.get("heldPercentInstitutions"),
             
             # Price & Volume
-            "CurrentPrice": info.get("regularMarketPrice"),
-            "PreviousClose": info.get("previousClose"),
-            "Open": info.get("open"),
-            "DayHigh": info.get("dayHigh"),
-            "DayLow": info.get("dayLow"),
-            "FiftyTwoWeekHigh": info.get("fiftyTwoWeekHigh"),
-            "FiftyTwoWeekLow": info.get("fiftyTwoWeekLow"),
-            "FiftyDayAverage": info.get("fiftyDayAverage"),
-            "TwoHundredDayAverage": info.get("twoHundredDayAverage"),
-            "Volume": info.get("volume"),
-            "AverageVolume": info.get("averageVolume"),
-            "AverageVolume10Day": info.get("averageVolume10days"),
-            "Beta": info.get("beta"),
+            # "CurrentPrice": info.get("regularMarketPrice"),
+            # "PreviousClose": info.get("previousClose"),
+            # "Open": info.get("open"),
+            # "DayHigh": info.get("dayHigh"),
+            # "DayLow": info.get("dayLow"),
+            # "FiftyTwoWeekHigh": info.get("fiftyTwoWeekHigh"),
+            # "FiftyTwoWeekLow": info.get("fiftyTwoWeekLow"),
+            # "FiftyDayAverage": info.get("fiftyDayAverage"),
+            # "TwoHundredDayAverage": info.get("twoHundredDayAverage"),
+            # "Volume": info.get("volume"),
+            # "AverageVolume": info.get("averageVolume"),
+            # "AverageVolume10Day": info.get("averageVolume10days"),
+            # "Beta": info.get("beta"),
             
             # Analyst Estimates
             "TargetMeanPrice": info.get("targetMeanPrice"),
@@ -115,12 +116,9 @@ for i, sym in enumerate(symbols, 1):
             "RecommendationMean": info.get("recommendationMean"),
             "LastUpdated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         })
-
-        time.sleep(0.5)
-
+        time.sleep(random.uniform(1, 5))
     except Exception as e:
         print(f"Failed {sym}: {e}", flush=True)
-
 df = pd.DataFrame(rows)
 df.to_csv(OUTPUT, index=False)
 
