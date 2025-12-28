@@ -1,5 +1,3 @@
-#app.R
-
 library(shiny)
 library(quantmod)
 library(ggplot2)
@@ -15,13 +13,14 @@ source("shap_engine.R")
 #===================================
 PYTHON <- "/Users/kasa/RStudio/studio/bin/python"  
 SCRIPT <- "/Users/kasa/RStudio/download_fundamentals.py"
-INPUT  <- "/Users/kasa/RStudio/symbols.csv"
-OUTPUT <- "/Users/kasa/RStudio/stock_fundamentals_out.csv"
+INPUTSYM  <- "/Users/kasa/RStudio/symbols.csv"
+OUTPUT <- "/Users/kasa/RStudio/stock_fundamentals_out_1.csv"
+MOVEMENTS <- "/Users/kasa/RStudio/price_movement_45d.csv"
 
 run_python_fundamentals <- function() {
   cmd <- sprintf(
     '"%s" "%s" "%s" "%s"',
-    PYTHON, SCRIPT, INPUT, OUTPUT
+    PYTHON, SCRIPT, INPUTSYM, OUTPUT
   )
   cat("Running:\n", cmd, "\n\n")
   system(cmd, intern = FALSE)
@@ -31,19 +30,45 @@ run_python_fundamentals <- function() {
   }
 }
 
-if (file.exists("OUTPUT")) {
-  tickers <- read.csv(OUTPUT, stringsAsFactors = FALSE)
-} else {
-  return(NULL)
+top_n_by <- function(df, metric, n = 25, decreasing = TRUE) {
+  # Filter out NA and invalid values based on metric type
+  filtered <- switch(metric,
+                     "TrailingPE" = df %>% filter(!is.na(TrailingPE), TrailingPE > 0),
+                     "ForwardPE" = df %>% filter(!is.na(ForwardPE), ForwardPE > 0),
+                     "ROE" = df %>% filter(!is.na(ROE)),
+                     "DebtToEquity" = df %>% filter(!is.na(DebtToEquity), DebtToEquity >= 0),
+                     "RevenueGrowth" = df %>% filter(!is.na(RevenueGrowth)),
+                     "EPS" = df %>% filter(!is.na(EPS)),
+                     "FreeCashFlow" = df %>% filter(!is.na(FreeCashFlow)),
+                     "CurrentRatio" = df %>% filter(!is.na(CurrentRatio), CurrentRatio > 0),
+                     "dividend_yield" = df %>% filter(!is.na(dividend_yield), dividend_yield >= 0),
+                     "MarketCap" = df %>% filter(!is.na(MarketCap), MarketCap > 0),
+                     # Default for other metrics
+                     df %>% filter(!is.na(.data[[metric]]))
+  )
+  
+  # Sort and get top N
+  if (decreasing) {
+    filtered %>% arrange(desc(.data[[metric]])) %>% head(n)
+  } else {
+    filtered %>% arrange(.data[[metric]]) %>% head(n)
+  }
 }
 
-financial_data <- tickers[, c(
+if (file.exists(OUTPUT)) {
+  fundamental_data <- read.csv(OUTPUT, stringsAsFactors = FALSE)
+} else {
+  stop("Fundamental output CSV not found: ", OUTPUT)
+}
+
+financial_data <- fundamental_data[, c(
   "Symbol", "Company", "Sector",
   "MarketCap", "revenue", "net_income", "ROE", 
   "OperatingMargin",  "FreeCashFlow", "EPS", 
   "dividend_yield", "BookValue", "TrailingPE",
-  "ForwardPE", "DebtToEquity","gross_profits","ebitda",
-  "Recommendation","DividendDate","FiveYearAvgDividendYield","TargetMeanPrice"
+  "ForwardPE", "DebtToEquity","gross_profits","ebitda","CurrentRatio",
+  "Recommendation","EnterpriseToEBITDA","FiveYearAvgDividendYield",
+  "TargetMeanPrice","anomaly_score","category","return_45d","market_context"
 )]
 
 symbols <- sort(unique(financial_data$Symbol))
@@ -111,13 +136,30 @@ ui <- fluidPage(
   titlePanel("Stock Screening"),
   sidebarLayout(
     sidebarPanel(
+      
       actionButton("runBtn", "Fundamentals", icon = icon("download")),
       actionButton("downloadBtn", "Market Data", icon = icon("sync")),
-      #actionButton("buildFeaturesBtn", "Build Features", icon = icon("cogs")),
-      actionButton("runBtn", "Run SHAP", icon = icon("play")), br(), br(), tableOutput("shapTable"),
       
-      selectInput("sector", "Select Sector", choices = sectors, selected = sectors[1]),
-      selectInput( "symbol", "Select Symbol", choices = NULL ), width = 3),
+      #actionButton("runBtn", "Run SHAP", icon = icon("play")), br(), br(), tableOutput("shapTable"),
+      
+      selectInput("rank_filter", "Filter Stocks By:",
+        choices = c(
+          "All Symbols" = "all",
+          "Top 25 High Movement" = "movement",
+          "Top 25 Market Cap" = "market_cap",
+          "Top 25 Low P/E" = "low_pe",
+          "Top 25 Low Forward P/E" = "low_forward_pe",
+          "Top 25 High ROE" = "high_roe",
+          "Top 25 Low Debt to Equity" = "low_debt",
+          "Top 25 Revenue Growth" = "revenue_growth",
+          "Top 25 High EPS" = "high_eps",
+          "Top 25 Free Cash Flow" = "high_fcf",
+          "Top 25 High Current Ratio" = "high_current_ratio",
+          "Top 25 Dividend Yield" = "high_dividend"
+        ),
+        selected = "All Stocks" ),
+      selectInput("symbol", "Select Symbol:", choices = NULL),
+      width = 3),
     
     mainPanel(
       plotOutput("chart", height = "800px"),
@@ -129,11 +171,60 @@ ui <- fluidPage(
 # Server
 # =======================
 server <- function(input, output, session) {
-  status <- reactiveVal("Ready")
+
+  ranked_symbols <- reactive({
+    df <- fundamental_data
+    
+    res <- switch(input$rank_filter,
+                  "all"                  = df,
+                  "movement"             = top_n_by(df, "anomaly_score"),
+                  "market_cap"           = top_n_by(df, "MarketCap"),
+                  "low_pe"               = top_n_by(df, "TrailingPE", decreasing = FALSE),
+                  "low_forward_pe"       = top_n_by(df, "ForwardPE", decreasing = FALSE),
+                  "high_roe"             = top_n_by(df, "ROE"),
+                  "low_debt"             = top_n_by(df, "DebtToEquity", decreasing = FALSE),
+                  "revenue_growth"       = top_n_by(df, "RevenueGrowth"),
+                  "high_eps"             = top_n_by(df, "EPS"),
+                  "high_fcf"             = top_n_by(df, "FreeCashFlow"),
+                  "high_current_ratio"   = top_n_by(df, "CurrentRatio"),
+                  "high_dividend"        = top_n_by(df, "dividend_yield"),
+                  df 
+    )
+    arrange(res, Symbol)
+  })
   
-  #==============================
-  # Sector and symbol selection
-  #==============================
+  selected_fundamental <- reactive({
+    req(input$symbol)
+    
+    fundamental_data[
+      fundamental_data$Symbol == input$symbol,
+      ,
+      drop = FALSE
+    ]
+  })
+  
+  is_high_movement <- reactive({
+    fin <- selected_fundamental()
+    
+    nrow(fin) == 1 &&
+      !is.na(fin$anomaly_score) &&
+      fin$anomaly_score >= 2
+  })
+
+  observeEvent(ranked_symbols(), {
+    
+    syms <- ranked_symbols()$Symbol
+    
+    updateSelectInput(
+      session,
+      "symbol",
+      choices = syms,
+      selected = syms[1]
+    )
+  })
+#==============================
+# Sector and symbol selection
+#==============================
   observeEvent(input$sector, {
     
     available_symbols <- financial_data %>%
@@ -145,10 +236,9 @@ server <- function(input, output, session) {
       session,
       "symbol",
       choices = available_symbols,
-      selected = available_symbols[1]
+      selected = ifelse(length(symbols) > 0, symbols[1], NULL)
     )
   }, ignoreInit = FALSE)
-  
   
   selected_fundamental <- reactive({
     req(input$symbol)
@@ -172,7 +262,6 @@ server <- function(input, output, session) {
       data_file    = "/Users/kasa/RStudio/market_features.csv"
     )
     read_csv("/Users/kasa/RStudio/SHAP_IMPORTANCE_BY_SYMBOL.csv", show_col_types = FALSE)
-    
   })
   
   output$shapTable <- renderTable({
@@ -183,10 +272,10 @@ server <- function(input, output, session) {
   observeEvent(input$runBtn, {
     status("Running Python script...")
     shinyjs::disable("runBtn")
-    
+
     tryCatch({
       success <- run_python_fundamentals()
-      
+
       if (success) {
         if (!is.null(data)) {
           status(paste("Success! Loaded", nrow(data), "records"))
@@ -207,6 +296,10 @@ server <- function(input, output, session) {
     req(input$symbol)
     read_stock_data(input$symbol)
   })
+  
+#===================================================  
+# Chart Starts here
+#===================================================    
   output$chart <- renderPlot({
     
     xt <- stock_data()
@@ -219,7 +312,17 @@ server <- function(input, output, session) {
         theme_void()
       return(p)
     }
-    fin <- financial_data[financial_data$Symbol == input$symbol, , drop = FALSE]
+    fin <- selected_fundamental()
+    title_text <- paste(fin$Symbol, "-", fin$Company, "(", fin$Sector, ")")
+    
+    if (is_high_movement()) {
+      title_text <- paste0(
+        "HIGH MOVEMENT: ",
+        title_text,
+        " | Score: ", round(fin$anomaly_score, 2),
+        " | 45D Return: ", round(fin$return_45d, 2)
+      )
+    }
     
     df <- data.frame(
       Date   = index(xt),
@@ -274,10 +377,17 @@ server <- function(input, output, session) {
       geom_line(aes(y = BB_dn), color = "darkgreen", alpha = 0.5) +
       scale_fill_manual(values = c("TRUE" = "green", "FALSE" = "red")) +
       labs(
-        title = paste(fin$Symbol, "-", fin$Company, "(", fin$Sector, ")"),
+        #title = paste(fin$Symbol, "-", fin$Company, "(", fin$Sector, ")"),
+        title =title_text,
         y = "Price", x = ""
       ) +
-      theme_minimal()
+      theme_minimal() +
+      theme(
+        plot.background = element_rect(
+          fill = if (is_high_movement()) "mistyrose" else "white",
+          color = NA
+        )
+      )
     
     p_volume <- ggplot(df, aes(Date, Volume)) +
       geom_col(aes(fill = Close >= Open), alpha = 0.6, show.legend = FALSE) +
@@ -300,7 +410,6 @@ server <- function(input, output, session) {
       geom_hline(yintercept = 0, color = "black", linetype = "solid", linewidth = 0.3) +
       labs(y = "MACD", x = "") +
       theme_minimal()
-    
     # =======================
     # FUNDAMENTAL PANEL
     # =======================
@@ -328,7 +437,7 @@ server <- function(input, output, session) {
           "Operating Margin:", round(fin$OperatingMargin, 2),
           "\nBook Value:", fin$BookValue,
           "\n5 Yrs Avg Dividend:",fin$FiveYearAvgDividendYield,
-          
+          "\nEnterpriseToEBITDA: ", round(fin$EnterpriseToEBITDA,2),
           "\nCurrent Price:", round(current_price, 2),
           "\n52W High:", round(high_52, 2),
           "\n52W Low:", round(low_52, 2)
@@ -367,5 +476,3 @@ server <- function(input, output, session) {
 
 shinyApp(ui, server)
 # shinyApp(ui, server, options = list(launch.browser = FALSE,  quiet = TRUE,  port = 3838, warn=-1,message=FALSE))
-
-
