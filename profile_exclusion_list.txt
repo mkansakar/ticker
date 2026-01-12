@@ -1,117 +1,151 @@
-Exclusion list - Directory
-Desktop 
-Videos 
-Music 
-Documents 
-Windows 
-Downloads 
-Searches 
-Citrix 
-Pictures 
-Contacts 
-Saved Games 
-AppData\Locallow 
-Local Settings 
-AppData\Local\Microsoft\Teams 
-AppData\Local\Microsoft\Outlook\RoamCache 
-AppData\Local\Microsoft\Outlook\Offline Address Books 
-AppData\local\Google\Chrome\User Data 
-AppData\Local\Microsoft\Windows\INetCache 
-AppData\local\Microsoft\Windows\IEDownloadHistory 
-AppData\Local\Microsoft\Internet Explorer\DOMStore 
-AppData\Local\Google\Software Reporter Tool 
-AppData\Local\Google\Chrome\User Data\Default\Application Cache 
-AppData\Local\Google\Chrome\User Data\Default\Code Cache 
-AppData\Local\Google\Chrome\User Data\Default\Crashpad 
-AppData\Local\Google\Chrome\User Data\Default\GPU Cache 
-AppData\Local\Google\Chrome\User Data\Default\Media Cache 
-AppData\Local\Google\Chrome\User Data\Default\Sync Data 
-AppData\Local\Google\Chrome\User Data\Default\Sync Data Backup 
-AppData\Local\Microsoft\OneDrive 
-AppData\Local\Chrome\User Data\Default\Service Worker 
-AppData\Local\Chrome\User Data\Default\Code Cache 
-AppData\Local\Microsoft\Windows\Temporary Internet Files 
-OneDrive - Cotiviti 
-%LOCALAPPDATA%\Microsoft\Windows\Temporary Internet Files 
-AppData\Local\Microsoft\Edge\User Data\Default\Service Worker\CacheStorage 
-AppData\Local\Microsoft\Edge\User Data\Default\Cache 
-AppData\Local\Microsoft\Edge\User Data\Default\Code Cache 
-AppData\Local\Microsoft\Edge\User Data\Default\IndexedDB 
-AppData\Local\Microsoft\Edge\User Data\BrowserMetrics 
-AppData\Local\Microsoft\Internet Explorer\CacheStorage 
-AppData\Local\Microsoft\Windows\INetCache\IE 
-AppData\Local\Microsoft\Windows\INetCache\Low\IE 
-AppData\Local\Microsoft\Windows\WebCache.old 
-AppData\Local\Microsoft\Windows\WebCache 
-AppData\Local\CrashDumps 
-AppData\Local\Microsoft\Office\16.0\OfficeFileCache 
-AppData\Local\Microsoft\Internet Explorer\Recovery\Active 
-AppData\Roaming\Microsoft\Teams\Service Worker 
-AppData\Local\Google\Chrome\User Data\Default\Service Worker 
-AppData\Local\Google\Chrome\User Data\Default\IndexedDB 
-AppData\Microsoft\Teams\*.txt 
-AppData\Microsoft\Teams\media-stack 
-AppData\Microsoft\Teams\Cache 
-AppData\Microsoft\Teams\GPUCache 
-AppData\Microsoft\Teams\meeting-addin\Cache 
-AppData\Microsoft\Teams\Service Worker\CacheStorage 
-AppData\Roaming\Microsoft\Teams\Cache 
-AppData\Local\Microsoft\Edge\User Data\Subresource Filter 
-AppData\Local\Microsoft\Office\SolutionPackages 
+Citrix UPM GPO Configuration - Optimized Lists
+1. Directory Exclusions List (Computer Configuration)
+AppData\Local\Google\Chrome\User Data\Default\Application Cache
+AppData\Local\Google\Chrome\User Data\Default\Cache
+AppData\Local\Google\Chrome\User Data\Default\Code Cache
+AppData\Local\Google\Chrome\User Data\Default\Crashpad
+AppData\Local\Google\Chrome\User Data\Default\GPU Cache
+AppData\Local\Google\Chrome\User Data\Default\Media Cache
+AppData\Local\Google\Chrome\User Data\Default\Service Worker
+AppData\Local\Microsoft\Edge\User Data\Default\Cache
+AppData\Local\Microsoft\Edge\User Data\Default\Code Cache
+AppData\Local\Microsoft\Edge\User Data\Default\Service Worker\CacheStorage
+AppData\Local\Microsoft\Edge\User Data\BrowserMetrics
+AppData\Local\Microsoft\Windows\INetCache
+AppData\Local\Microsoft\Internet Explorer\CacheStorage
+AppData\Local\Microsoft\Internet Explorer\DOMStore
+AppData\Local\Microsoft\Windows\Temporary Internet Files
+AppData\Local\Temp
+AppData\Local\CrashDumps
+AppData\Local\Microsoft\Windows\WebCache
+AppData\Local\Microsoft\Office\16.0\OfficeFileCache
+AppData\Roaming\Microsoft\Teams\Cache
+AppData\Roaming\Microsoft\Teams\GPUCache
+AppData\Roaming\Microsoft\Teams\meeting-addin\Cache
+AppData\Roaming\Microsoft\Teams\Service Worker
+AppData\Local\Google\Software Reporter Tool
+AppData\Local\Microsoft\OneDrive
+
+2. File Exclusions List
+*.dmp
+*.tmp
+*.log
+*.etl
+*.cache
+Thumbs.db
+IconCache.db
+ehthumbs.db
+UsrClass.dat
+UsrClass.dat.LOG1
+UsrClass.dat.LOG2
+NTUSER.DAT.LOG*
+NTUSER.DAT{*}
+*.ost
+*.pst
+*.oab
+desktop.ini
+~$*
+*.asd
 
 
-Exclusion list - files:
-AppData\Local\*.dmp 
-*icon*.db 
-!ctx_localappdata\Microsoft\Windows\UsrClass.dat* 
-*thumb*.db 
+3. Critical O365 WAM Authentication Directories to SYNC
+(DO NOT exclude these - Required for Modern Authentication)
 
+AppData\Local\Microsoft\IdentityCache
+AppData\Local\Microsoft\IdentityCache\*
+AppData\Local\Microsoft\TokenBroker
+AppData\Local\Microsoft\TokenBroker\Cache
+AppData\Local\Packages\Microsoft.AAD.BrokerPlugin_cw5n1h2txyewy
+AppData\Local\Packages\Microsoft.AAD.BrokerPlugin_cw5n1h2txyewy\AC
+AppData\Local\Packages\Microsoft.AAD.BrokerPlugin_cw5n1h2txyewy\LocalCache
+AppData\Local\Packages\Microsoft.AAD.BrokerPlugin_cw5n1h2txyewy\LocalState
+AppData\Local\Packages\Microsoft.Windows.CloudExperienceHost_cw5n1h2txyewy
+AppData\Local\Packages\Microsoft.Windows.CloudExperienceHost_cw5n1h2txyewy\AC
+AppData\Roaming\Microsoft\Protect
+AppData\Roaming\Microsoft\Crypto
+AppData\Roaming\Microsoft\SystemCertificates
+AppData\Local\Microsoft\Credentials
+AppData\Roaming\Microsoft\Credentials
 
-Directory to Sync:
-List of directories to synchronize: 
-AppData\local\Google\Chrome\User Data\Default\Storage 
-AppData\local\Google\Chrome\User Data\Default\Sync Data 
-Appdata\Roaming\Microsoft\SystemCertificates 
-Appdata\Roaming\Microsoft\Protect 
-Appdata\Roaming\Microsoft\Crypto 
-Appdata\Roaming\Microsoft\Credentials 
-AppData\Local\Microsoft\Credentials 
-AppData\Local\Microsoft\Windows\Caches 
-AppData\Local\Microsoft\Office\16.0\Licensing 
-AppData\Local\Microsoft\Credential 
-AppData\Local\SourceTree 
-AppData\Local\Microsoft\Edge\User Data\First Run 
-AppData\Local\Microsoft\Edge\User Data\Local State 
-AppData\Local\Microsoft\Edge\User Data\Default\Bookmarks 
-AppData\Local\Microsoft\Edge\User Data\Default\Cookies 
-AppData\Local\Microsoft\Edge\User Data\Default\Favicons 
-AppData\Local\Microsoft\Edge\User Data\Default\History 
-AppData\Local\Microsoft\Edge\User Data\Default\Last Session 
-AppData\Local\Microsoft\Edge\User Data\Default\Login Data 
-AppData\Local\Microsoft\Edge\User Data\Default\Preferences 
+4. Directories to SYNC (User Data & Settings)
+AppData\Local\Google\Chrome\User Data\Default
+AppData\Local\Microsoft\Edge\User Data\Default
+AppData\Local\Microsoft\Office\16.0\Licensing
+AppData\Local\Microsoft\Windows\Caches
+AppData\Roaming\Microsoft\Teams
+AppData\Roaming\Microsoft\Office
 
-List of files to synchronize: 
-AppData\Local\Google\Chrome\User Data\Login Data-journal 
-AppData\Local\Google\Chrome\User Data\Bookmarks 
-AppData\Local\Google\Chrome\User Data\Cookies 
-AppData\Local\Google\Chrome\User Data\Current Session 
-AppData\Local\Google\Chrome\User Data\Current Tabs 
-AppData\Local\Google\Chrome\User Data\Favicon 
-AppData\Local\Google\Chrome\User Data\Last Session 
-AppData\Local\Google\Chrome\User Data\Last Tabs 
-AppData\Local\Google\Chrome\User Data\Preferences 
-AppData\Local\Google\Chrome\User Data\Shortcuts 
-AppData\Local\Google\Chrome\User Data\Top Sites 
-AppData\Local\Google\Chrome\User Data\Login Data 
-AppData\Local\Google\Chrome\User Data\Web Data 
-AppData\Local\Google\Chrome\User Data\Web Data-journal 
-AppData\Local\Google\Chrome\User Data\Origin Bound Certs 
-AppData\Local\Google\Chrome\User Data\Exclusion Cookies 
-AppData\Local\Google\Chrome\User Data\Local State 
-AppData\Local\Google\Chrome\User Data\First Run 
-AppData\Local\Google\Chrome\User Data\Default\Favicons 
-AppData\Local\Google\Chrome\User Data\Default\History 
-AppData\Local\Google\Chrome\User Data\Default\Preferences 
-AppData\Local\SourceTree\SourceTree.exe 
-AppData\Local\Microsoft\IdentityCache 
-AppData\Roaming\Microsoft\Teams 
+5. Files to SYNC
+AppData\Local\Google\Chrome\User Data\Local State
+AppData\Local\Google\Chrome\User Data\Default\Bookmarks
+AppData\Local\Google\Chrome\User Data\Default\Cookies
+AppData\Local\Google\Chrome\User Data\Default\Favicons
+AppData\Local\Google\Chrome\User Data\Default\History
+AppData\Local\Google\Chrome\User Data\Default\Login Data
+AppData\Local\Google\Chrome\User Data\Default\Preferences
+AppData\Local\Microsoft\Edge\User Data\Local State
+AppData\Local\Microsoft\Edge\User Data\Default\Bookmarks
+AppData\Local\Microsoft\Edge\User Data\Default\Cookies
+AppData\Local\Microsoft\Edge\User Data\Default\Favicons
+AppData\Local\Microsoft\Edge\User Data\Default\History
+AppData\Local\Microsoft\Edge\User Data\Default\Login Data
+AppData\Local\Microsoft\Edge\User Data\Default\Preferences
+
+6. Registry Exclusions (O365 WAM Critical - DO NOT exclude)
+Software\Microsoft\IdentityCRL
+Software\Microsoft\IdentityStore
+Software\Microsoft\Cryptography\Protect\Providers
+Software\Microsoft\Windows\CurrentVersion\Authentication\LogonUI
+Software\Microsoft\Windows\CurrentVersion\AAD
+Software\Microsoft\Windows NT\CurrentVersion\TokenBroker
+
+7. Additional O365 Exclusions (Recommended)
+Directory Exclusions:
+
+AppData\Local\Microsoft\Office\16.0\WebServiceCache
+AppData\Local\Microsoft\Office\16.0\Wef
+AppData\Local\Microsoft\Teams\Current\Cache
+AppData\Local\Microsoft\Teams\Current\Code Cache
+AppData\Local\Microsoft\Teams\Current\GPU Cache
+AppData\Local\Microsoft\Teams\Current\Service Worker
+File Exclusions:
+
+AppData\Local\Microsoft\Office\16.0\Lync\*.cache
+AppData\Local\Microsoft\Office\16.0\Lync\*.log
+AppData\Local\Microsoft\Teams\Cookies
+AppData\Local\Microsoft\Teams\Cookies-journal
+AppData\Local\Microsoft\Teams\Network\Cookies
+GPO Configuration Notes:
+For O365 WAM to work correctly:
+Enable "Use mandatory profile" = Disabled
+
+Enable "Local profile conflict handling" = Rename local and use roaming
+
+Enable "Process logged on user's group policy" = Enabled
+
+Enable "Migrate Windows roaming profiles" = Enabled
+
+Additional GPO Settings:
+Delete locally cached profiles on logoff = Enabled
+
+Enable Active Write Back = Enabled (for TokenBroker)
+
+Active Write Back Registry = Software\Microsoft\IdentityCRL;Software\Microsoft\Windows\CurrentVersion\Authentication\LogonUI
+
+Validation Steps for O365 Authentication:
+Check AppData\Local\Microsoft\IdentityCache exists in profile
+
+Verify AppData\Local\Packages\Microsoft.AAD.BrokerPlugin_* folders sync
+
+Test Modern Authentication across logoffs
+
+Monitor Event Viewer for Token Broker errors (Event ID 1500)
+
+Common Issues & Fixes:
+Authentication loops: Ensure IdentityCache syncs
+
+"Something went wrong" errors: Check TokenBroker folder permissions
+
+Repeated password prompts: Verify all WAM registry keys sync
+
+Note: These lists assume you're using Folder Redirection for Desktop, Documents, Pictures, Videos, Music, Downloads, and Favorites. If not, add those folders to the exclusion list to prevent profile bloat.
